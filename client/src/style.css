@@ -1,0 +1,150 @@
+* { box-sizing: border-box; }
+:root {
+  --bg-0: #06070d;
+  --fg: #e8ecff;
+  --muted: #98a2b3;
+  --accent: #7c3aed;
+  --accent-2: #22d3ee;
+  --accent-3: #f472b6;
+}
+html, body, #app { height: 100%; }
+html, body { margin: 0; background: radial-gradient(1200px 800px at 70% 20%, #0f1629, var(--bg-0)) fixed; color: var(--fg); font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+#app { position: relative; overflow: hidden; }
+canvas.webgl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+.hud { position: absolute; left: 0; right: 0; padding: 16px 20px; display: flex; align-items: center; gap: 12px; pointer-events: none; }
+.hud > * { pointer-events: auto; }
+.hud.top { top: 0; background: linear-gradient(180deg, rgba(6,7,13,0.9), rgba(6,7,13,0)); }
+.hud.bottom { bottom: 0; flex-direction: column; gap: 12px; background: linear-gradient(0deg, rgba(6,7,13,0.9), rgba(6,7,13,0)); }
+.brand { font-weight: 700; letter-spacing: 0.3px; opacity: 0.95; }
+.spacer { flex: 1; }
+
+.file-btn { cursor: pointer; background: rgba(255,255,255,0.07); color: white; padding: 8px 14px; border-radius: 999px; font-weight: 400; box-shadow: 0 8px 32px rgba(124,58,237,0.35); transition: transform .15s ease; user-select: none; }
+.file-btn:hover { transform: translateY(-1px); }
+.file-btn input { display: none; }
+
+.controls { width: 100%; display: grid; grid-template-columns: auto auto auto 1fr auto; gap: 12px; align-items: center; }
+.btn { appearance: none; border: none; outline: none; background: rgba(255,255,255,0.07); color: var(--fg); padding: 10px 14px; border-radius: 12px; font-size: 16px; cursor: pointer; transition: background .15s ease, transform .1s ease; }
+.btn:hover { background: rgba(255,255,255,0.12); }
+.btn:active { transform: translateY(1px) scale(0.98); }
+.btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-3)); box-shadow: 0 8px 28px rgba(124,58,237,0.3); }
+
+.active-btn { cursor: pointer; background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: white; padding: 8px 14px; border-radius: 999px; font-weight: 600; box-shadow: 0 8px 32px rgba(124,58,237,0.35); transition: transform .15s ease; user-select: none; }
+
+.time { display: grid; grid-template-columns: 56px 1fr 56px; gap: 8px; align-items: center; }
+.time input[type="range"], .volume input[type="range"] { -webkit-appearance: none; appearance: none; height: 8px; border-radius: 999px; background: rgba(255,255,255,0.1); outline: none; }
+.time input[type="range"]::-webkit-slider-thumb, .volume input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; background: linear-gradient(135deg, var(--accent-2), var(--accent)); border-radius: 50%; box-shadow: 0 0 0 4px rgba(34,211,238,0.2); cursor: pointer; }
+.volume { display: flex; align-items: center; gap: 10px; opacity: 0.9; }
+
+.playlist { width: 100%; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(180px, 1fr); gap: 10px; padding-bottom: 10px; overflow-x: auto; scrollbar-width: thin; }
+.playlist .track { min-width: 0; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.06); padding: 10px 12px; border-radius: 14px; cursor: pointer; transition: background .15s ease, transform .1s ease, border-color .15s ease; }
+.playlist .track:hover { background: rgba(255,255,255,0.1); transform: translateY(-1px); }
+.playlist .track.active { border-color: rgba(34,211,238,0.6); box-shadow: inset 0 0 0 1px rgba(34,211,238,0.4); }
+.playlist .title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.playlist .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+#dropzone { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; color: white; font-weight: 700; letter-spacing: 1px; background: rgba(34,211,238,0.06); border: 2px dashed rgba(34,211,238,0.45); text-shadow: 0 2px 12px rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
+#dropzone.active { display: flex; animation: pop .2s ease; }
+
+/* 滚动条整体部分 */
+::-webkit-scrollbar {
+    width: 2px;  /* 滚动条的宽度 */
+    height: 5px; /* 滚动条的高度 */
+}
+
+/* 滚动条轨道 */
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.04); /* 轨道颜色 */
+}
+
+/* 滚动条滑块 */
+::-webkit-scrollbar-thumb {
+    background: #888; /* 滑块颜色 */
+    border-radius: 10px; /* 滑块圆角 */
+}
+
+/* 滑块悬停时 */
+::-webkit-scrollbar-thumb:hover {
+    background: #555; /* 滑块悬停颜色 */
+}
+
+/* 歌词容器样式 - 居中显示 */
+.lyrics-container {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  transform: translate(0%, -50%);
+  /* width: 90%; */
+  width: 30%;
+  /* max-width: 600px; */
+  padding: 24px;
+  /* background: rgba(255, 255, 255, 0.04); */
+  border-radius: 16px;
+  max-height: 80%;
+  /* max-height: 100vh; */
+  overflow-y: auto;
+  text-align: center;
+  /* backdrop-filter: blur(8px); */
+  /* box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); */
+  /* border: 1px solid rgba(255, 255, 255, 0.08); */
+  /* z-index: 10; */
+}
+/* 隐藏滚动条，但保留滚动功能 */
+.lyrics-container::-webkit-scrollbar { 
+  display: none;  /* Chrome, Safari, Opera */
+}
+.lyrics-container {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* 歌词行样式 */
+.lyric-line {
+  padding: 8px 0;
+  color: #98a2b3;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.lyric-line:hover {
+  opacity: 1;
+  transform: translateX(4px);
+}
+
+/* 当前播放歌词样式 */
+.active-lyric {
+  color: #e8ecff;
+  font-size: 16px;
+  font-weight: 600;
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+/* 无歌词状态 */
+.no-lyrics {
+  padding: 20px;
+  color: #98a2b3;
+  font-style: italic;
+}
+
+/* 播放列表轨道项样式增强 */
+.track {
+  transition: all 0.2s ease;
+}
+
+.track:hover {
+  background: rgba(255, 255, 255, 0.08) !important;
+}
+
+.track.active {
+  background: rgba(255, 105, 180, 0.2) !important;
+  border: 1px solid rgba(255, 105, 180, 0.3);
+}
+
+@media (max-width: 768px) {
+  .controls { grid-template-columns: auto auto auto 1fr; }
+  .volume { display: none; }
+  .playlist { grid-auto-columns: minmax(66%, 1fr); }
+}
