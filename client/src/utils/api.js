@@ -1,4 +1,4 @@
-const BASE = 'http://192.168.0.132:9090';
+const BASE = 'http://127.0.0.1:9090';
 
 // 工具函数：解析JSON响应
 function toJSON(res) {
