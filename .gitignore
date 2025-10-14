@@ -2,4 +2,4 @@ node_modules
 .DS_Store
 dist
 my_env/
-__pycache__/
+__pycache__/my_env/
